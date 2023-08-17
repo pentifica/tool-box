@@ -22,27 +22,42 @@
 #include <iostream>
 
 namespace pentifica::tbox {
-/// @brief  Streams the tuple members
-/// @tparam TupleType   Type information
-/// @tparam ...Is   Indexes into the tuple
-/// @param os   Where to stream
-/// @param tp   The tuple to stream
-/// @param Is   Tuple indexes
-/// @return     The supplied stream
-template<typename TupleType, std::size_t... Is>
-std::ostream& PrintTuple(std::ostream& os, TupleType const& tp, std::index_sequence<Is...>) {
-    auto print_field = [&os](const auto& x) { os << x; };
-    (print_field(std::get<Is>(tp)), ...);
-    return os;
-}
-/// @brief  Streams a tuple
-/// @tparam TupleType   The type information for the tuple
-/// @tparam TupleSize   Number of tuple members
-/// @param os   Where to stream the tuple
-/// @param tp   The tuple to stream
-/// @return     The supplied stream
-template<typename TupleType, std::size_t TupleSize = std::tuple_size<TupleType>::value>
-std::ostream& operator<<(std::ostream& os, TupleType const& tp) {
-    return PrintTuple(os, tp, std::make_index_sequence<TupleSize>{});
-}
+    /// @brief  Streams the tuple members
+    /// @tparam TupleType   Type information
+    /// @tparam ...Is   Indexes into the tuple
+    /// @param os   Where to stream
+    /// @param tp   The tuple to stream
+    /// @param Is   Tuple indexes
+    /// @return     The supplied stream
+    template<typename TupleType, std::size_t... Is>
+    std::ostream& PrintTuple(std::ostream& os, TupleType const& tp, std::index_sequence<Is...>) {
+        auto print_field = [&os](const auto& x) { os << x; };
+        (print_field(std::get<Is>(tp)), ...);
+        return os;
+    }
+    /// @brief  Streams a tuple
+    /// @tparam TupleType   The type information for the tuple
+    /// @tparam TupleSize   Number of tuple members
+    /// @param os   Where to stream the tuple
+    /// @param tp   The tuple to stream
+    /// @return     The supplied stream
+    template<typename TupleType, std::size_t TupleSize = std::tuple_size<TupleType>::value>
+    std::ostream& operator<<(std::ostream& os, TupleType const& tp) {
+        return PrintTuple(os, tp, std::make_index_sequence<TupleSize>{});
+    }
+    /// @brief Implements RAII for an encapsulated set of actions. Can be either a functor
+    ///        or lambda. The encapsulating object must support copy semantics.
+    /// @tparam Action Type of encapsulation
+    template<typename Action>
+    class RAII {
+    public:
+        explicit RAII(Action action) : action_{action} {}
+        ~RAII() { action_(); }
+        RAII(RAII const&) = delete;
+        RAII(RAII&&) = delete;
+        RAII& operator=(RAII const&) = delete;
+        RAII& operator=(RAII&&) = delete;
+    private:
+        Action action_;
+    };
 }
