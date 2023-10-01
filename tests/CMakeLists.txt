@@ -10,6 +10,7 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
 add_executable(test_toolbox
     Test_Factory.cpp
+    Test_Utility.cpp
     )
 
 target_link_libraries(test_toolbox
