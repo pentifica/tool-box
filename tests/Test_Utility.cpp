@@ -3,6 +3,7 @@
 #include    <gtest/gtest.h>
 
 #include    <string>
+#include    <strstream>
 
 namespace {
 
@@ -15,7 +16,7 @@ namespace {
     };
 }
 
-TEST(Test_Utility, RAII) {
+TEST(Test_Utility, Test_RAII) {
     using namespace pentifica::tbox;
 
     std::string result{};
@@ -33,4 +34,11 @@ TEST(Test_Utility, RAII) {
     }
     EXPECT_FALSE(result.empty());
     EXPECT_STREQ(result.c_str(), expected.c_str());
+}
+
+TEST(Test_Utility, Test_PrintTuple) {
+    using namespace pentifica::tbox;
+
+    auto data = std::make_tuple(5, 6.0, "This is a test");
+    std::ostringstream oss;
 }
