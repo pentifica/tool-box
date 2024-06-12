@@ -6,7 +6,7 @@
 #include    <sstream>
 #include    <iostream>
 
-TEST(Test_StrSwitch, Test_String) {
+TEST(Test_StrSwitch, Test_String_FNV1a) {
     using namespace pentifica::tbox;
     using namespace pentifica::tbox::literals;
 
@@ -27,7 +27,7 @@ TEST(Test_StrSwitch, Test_String) {
     EXPECT_TRUE(value == oss.str());
 }
 
-TEST(Test_StrSwitch, Test_Char) {
+TEST(Test_StrSwitch, Test_Char_FNV1a) {
     using namespace pentifica::tbox;
     using namespace pentifica::tbox::literals;
 
@@ -48,7 +48,7 @@ TEST(Test_StrSwitch, Test_Char) {
     EXPECT_STREQ(value, oss.str().c_str());
 }
 
-TEST(Test_StrSwitch, Test_Literal) {
+TEST(Test_StrSwitch, Test_Literal_FNV1a) {
     using namespace pentifica::tbox;
     using namespace pentifica::tbox::literals;
 

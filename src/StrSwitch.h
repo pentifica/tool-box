@@ -1,24 +1,60 @@
 #include <bits/stdc++.h>
-
+/// @brief This file contains an implementation of the Fowler-Noll-Vo hash function as
+///         described @ https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 namespace pentifica::tbox {
     namespace internal {
         template<size_t N>
         struct fnv_hash_values;
 
+        /// @brief  Values for the 32-bit hash implementation 
         template<>
         struct fnv_hash_values<32> {
             static constexpr uint32_t base = 2166136261UL;
             static constexpr uint32_t prime = 16777619UL;
         };
-
+        /// @brief  Values for the 64-bit hash implementation
         template<>
         struct fnv_hash_values<64> {
             static constexpr uint64_t base = 14695981039346656037ULL;
             static constexpr uint64_t prime = 1099511628211ULL;
         };
 
+        /// @brief  This class implements FNV-1 hash from Fowler-Noll-Vo
+        /// @tparam The type of the hash result. Must be unsigned
         template<typename ResultT>
-        struct fnv_hash {
+        struct fnv1_hash {
+            static constexpr ResultT base_ = fnv_hash_values<CHAR_BIT * sizeof(ResultT)>::base;
+            static constexpr ResultT prime_ = fnv_hash_values<CHAR_BIT * sizeof(ResultT)>::prime;
+
+            static constexpr ResultT string_hash(const char* str, ResultT base = base_) {
+                return str ? str_hash_impl(str[0], str + 1, base) : 0;
+            }
+
+            template<typename T>
+            static constexpr ResultT hash(const T* p, size_t sz, ResultT base = base_) {
+                return p ? hash_impl(static_cast<const char*>(p), sizeof(T) * sz, base) : 0;
+            }
+
+        protected:
+            static constexpr ResultT str_hash_impl(char c, const char* remain, ResultT value) {
+                return (c == 0)
+                    ? value
+                    : str_hash_impl(remain[0],
+                        remain + 1,
+                        static_cast<ResultT>(value * prime_) ^ static_cast<ResultT>(c));
+            }
+
+            static constexpr ResultT hash_impl(const char* current, size_t remain, ResultT value) {
+                return (remain == 0)
+                    ? value
+                    : hash_impl(current + 1,
+                        remain - 1,
+                        static_cast<ResultT>(value *prime_) ^ static_cast<ResultT>(*current));
+            }
+        };
+
+        template<typename ResultT>
+        struct fnv1a_hash {
             static constexpr ResultT base_ = fnv_hash_values<CHAR_BIT * sizeof(ResultT)>::base;
             static constexpr ResultT prime_ = fnv_hash_values<CHAR_BIT * sizeof(ResultT)>::prime;
 
@@ -49,12 +85,12 @@ namespace pentifica::tbox {
             }
         };
 
-        template<typename ResultT>
+        template<typename ResultT, typename Hasher = fnv1_hash<ResultT>>
         class string_hash {
         public:
             using hash_type = ResultT;
             using value_type = ResultT;
-            using hasher = fnv_hash<ResultT>;
+            using hasher = Hasher;
 
             constexpr string_hash() = default;
             constexpr explicit string_hash(hash_type value) : value_(value) {}
