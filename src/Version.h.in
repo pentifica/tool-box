@@ -17,6 +17,9 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 /// SOFTWARE.
+//  Versioning follows the guidelines provided in
+//  https://semver.org/
 #pragma once
 #define toolbox_VERSION_MAJOR @toolbox_VERSION_MAJOR@
 #define toolbox_VERSION_MINOR @toolbox_VERSION_MINOR@
+#define toolbox_VERSION_PATCH @toolbox_VERSION_PATCH@
