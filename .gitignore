@@ -6,3 +6,4 @@ _deps
 src/Version.h
 build
 *.swp
+.vscode
