@@ -27,6 +27,7 @@
 #include    <expected>
 #include    <random>
 #include    <memory>
+#include    <functional>
 
 namespace pentifica::tbox {
     //  forward references
@@ -36,9 +37,10 @@ namespace pentifica::tbox {
     class SkipList {
     public:
         /// @nrief  Basic setup of an instance
-        /// @param  max_level    Number of levels in the skiplist
+        /// @param  max_level   Number of levels in the skiplist
+        /// @param  gen_next_skip_level  Generates a skip level (0 .. max_level - 1)
         /// @note Levels are numbered from 0 .. max_level-1
-        SkipList(int max_level);
+        SkipList(int max_level, std::function<int(int)> gen_next_skip_level);
         /// @brief  Instance cleanup
         ~SkipList();
 
@@ -72,22 +74,10 @@ namespace pentifica::tbox {
         std::pair<SkipListNode*, std::vector<SkipListNode*>>
         IdentifyPredecessorNode(std::string const& key);
 
-        auto GetRandomLevel() {
-            int level{1};
-            while((level < max_level_) && (distribution_(rng_) < p_)) {
-                ++level;
-            }
-            return level - 1;
-        }
-
     public:
         SkipListNode* start_{};
         SkipListNode* end_{};
         const int max_level_{};
-        int current_level_{};
-        double p_{0.5};
-        std::mt19937 rng_{std::mt19937(std::time(nullptr))};
-        std::uniform_real_distribution<double>
-            distribution_{std::uniform_real_distribution<double>(0.0, 1.0)};
+        std::function<int(int)> gen_next_skip_level_{};
     };
 }

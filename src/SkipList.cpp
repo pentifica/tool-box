@@ -18,14 +18,17 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 /// SOFTWARE.
 ///
-/// This code is based on the article https://rowjee.com/blog/skiplists
+/// This code is based on:
+///     https://rowjee.com/blog/skiplists
+///     https://en.wikipedia.org/wiki/Skip_list#:~:text=The%20expected%20number,against%20storage%20costs.
 #include    "SkipList.h"
 
 #include    <ranges>
 
 namespace pentifica::tbox {
-SkipList::SkipList(int max_level)
+SkipList::SkipList(int max_level, std::function<int(int)> gen_next_skip_level)
     : max_level_(max_level)
+    , gen_next_skip_level_(gen_next_skip_level)
 {
     start_ = new SkipListNode(max_level_ - 1, "START_KEY", "START_VALUE");
     end_ = new SkipListNode(max_level_ - 1, "END_KEY", "END_VALUE");
@@ -86,7 +89,7 @@ SkipList::Insert(std::string const& key, std::string const& value) {
     //  The key doesn't exist at the current node, insert it
     //  Update all pointers in the reachability chain to reach this node
     else {
-        auto level = GetRandomLevel();
+        auto level = gen_next_skip_level_(max_level_);
         auto new_node = new SkipListNode(level, key, value);
         for(int i = 0; i <= level; i++) {
             new_node->links_[i] = update[i]->links_[i];

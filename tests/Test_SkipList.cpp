@@ -1,4 +1,5 @@
 #include    <SkipList.h>
+#include    <SkipListGen.h>
 
 #include    <gtest/gtest.h>
 
@@ -7,7 +8,22 @@
 #include    <algorithm>
 
 namespace {
+    using namespace pentifica::tbox;
+
     constexpr int max_level{5};
+    std::function<int(int)> level_generator = SkipListLevelGenerator(.5);
+}
+TEST(Test_SkipListLevelGenerator, test_values) {
+    using namespace pentifica::tbox;
+
+    SkipListLevelGenerator generator(.5);
+
+    constexpr int loops = 1000;
+    for(int i = 0; i < loops; i++) {
+        auto level = generator(max_level);
+        ASSERT_LE(0, level);
+        ASSERT_GT(max_level, level);
+    }
 }
 TEST(Test_SkipListNode, test_init) {
     using namespace pentifica::tbox;
@@ -30,7 +46,7 @@ TEST(Test_SkipListNode, test_init) {
 TEST(Test_SkipList, test_init) {
     using namespace pentifica::tbox;
 
-    auto sl = SkipList(max_level);
+    auto sl = SkipList(max_level, level_generator);
     for(auto const& link : sl.start_->links_) {
         ASSERT_EQ(link, sl.end_);
     }
@@ -72,7 +88,7 @@ TEST(Test_SkipList, test_insert) {
     //  set up the test
     std::clog << std::format("Initializing SkipList with level {}", max_level)
               << std::endl;            
-    auto sl = new SkipList(max_level);
+    auto sl = new SkipList(max_level, level_generator);
 
     std::vector<std::tuple<std::string, std::string>> kv_pairs = {
         {"hello", "world"},         {"something", "else"},
@@ -93,7 +109,7 @@ TEST(Test_SkipList, test_insert_and_search) {
     //  initialize test
     std::clog << std::format("Initializing SkipList with level {}", max_level)
               << std::endl;
-    auto skip_list = SkipList(max_level);
+    auto skip_list = SkipList(max_level, level_generator);
     std::clog << skip_list;
 
     //  load data into the skip list
@@ -132,7 +148,7 @@ TEST(Test_SkipList, test_delete) {
     using namespace pentifica::tbox;
 
     std::clog << std::format("initializing SkipList with levels {}\n", max_level);
-    auto skip_list = SkipList(max_level);
+    auto skip_list = SkipList(max_level, level_generator);
 
     //  load some data into the SkipList
     std::vector<std::tuple<std::string, std::string>> kv_pairs {
@@ -168,7 +184,7 @@ TEST(Test_SkipList, test_scan) {
     using namespace pentifica::tbox;
 
     std::clog << std::format("initializing SkipList with levels {}\n", max_level);
-    auto skip_list = SkipList(max_level);
+    auto skip_list = SkipList(max_level, level_generator);
 
     //  Verify an empty list
     auto const& empty_list = skip_list.Scan();
