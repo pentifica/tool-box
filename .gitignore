@@ -7,3 +7,5 @@ src/Version.h
 build
 *.swp
 .vscode
+*.a
+*.log

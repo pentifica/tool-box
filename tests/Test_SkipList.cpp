@@ -47,8 +47,8 @@ TEST(Test_SkipList, test_init) {
     using namespace pentifica::tbox;
 
     auto sl = SkipList(max_level, level_generator);
-    for(auto const& link : sl.start_->links_) {
-        ASSERT_EQ(link, sl.end_);
+    for(auto const& link : sl.start_sentinel_->links_) {
+        ASSERT_EQ(link, sl.end_sentinel_);
     }
 }
 
@@ -57,8 +57,8 @@ TEST(Test_SkipList, test_insert) {
 
     //  linear search for the key in the skip list
     auto linear_search = [](std::string key, SkipList* sl) {
-        auto current_node = sl->start_;
-        while(current_node != sl->end_) {
+        auto current_node = sl->start_sentinel_;
+        while(current_node != sl->end_sentinel_) {
             if(current_node->key_ == key) {
                 return SkipListError::ErrorVariant::NOERR;
             }
@@ -71,10 +71,10 @@ TEST(Test_SkipList, test_insert) {
 
     //  Check the monotonicity of the keys
     auto monotonicity_check = [](SkipList* sl) {
-        auto current_node = sl->start_->links_[0];
+        auto current_node = sl->start_sentinel_->links_[0];
         std::string prev_key{};
         std::string curr_key{};
-        while(current_node != sl->end_) {
+        while(current_node != sl->end_sentinel_) {
             prev_key = curr_key;
             curr_key = current_node->key_;
             if(!(curr_key > prev_key)) {

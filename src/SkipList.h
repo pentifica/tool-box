@@ -75,8 +75,8 @@ namespace pentifica::tbox {
         IdentifyPredecessorNode(std::string const& key);
 
     public:
-        SkipListNode* start_{};
-        SkipListNode* end_{};
+        SkipListNode* start_sentinel_{};
+        SkipListNode* end_sentinel_{};
         const int max_level_{};
         std::function<int(int)> gen_next_skip_level_{};
     };

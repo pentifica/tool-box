@@ -23,25 +23,38 @@
 ///     https://en.wikipedia.org/wiki/Skip_list#:~:text=The%20expected%20number,against%20storage%20costs.
 #include    "SkipList.h"
 
-#include    <ranges>
-
 namespace pentifica::tbox {
 SkipList::SkipList(int max_level, std::function<int(int)> gen_next_skip_level)
     : max_level_(max_level)
     , gen_next_skip_level_(gen_next_skip_level)
 {
-    start_ = new SkipListNode(max_level_ - 1, "START_KEY", "START_VALUE");
-    end_ = new SkipListNode(max_level_ - 1, "END_KEY", "END_VALUE");
+    start_sentinel_ = new SkipListNode(max_level_ - 1, {}, {});
+    end_sentinel_ = new SkipListNode(max_level_ - 1, {}, {});
 
     //  connect start and end nodes
-    for(auto& link : start_->links_) {
-        link = end_;
+    for(auto& link : start_sentinel_->links_) {
+        link = end_sentinel_;
     }
 }
 
 SkipList::~SkipList() {
-    delete start_;
-    delete end_;
+    for(auto node = start_sentinel_->links_[0];
+        node != end_sentinel_;
+        node = start_sentinel_->links_[0]) {
+
+        //  move node links to start_sentinel_
+        for(int i = 0; i < max_level_; i++) {
+            if(start_sentinel_->links_[i] != node) {
+                break;
+            }
+            start_sentinel_->links_[i] = node->links_[i];
+        }
+
+        delete node;
+    }
+
+    delete start_sentinel_;
+    delete end_sentinel_;
 }
 
 std::pair<SkipListNode*, std::vector<SkipListNode*>>
@@ -50,14 +63,14 @@ SkipList::IdentifyPredecessorNode(std::string const& key) {
     auto update = std::vector<SkipListNode*>(max_level_, nullptr);
 
     //  see if the node already exists
-    auto current_node{start_};
+    auto current_node{start_sentinel_};
 
     for(auto current_level = max_level_ - 1; current_level >= 0; current_level--) {
 
         //  check if the next node in the level has a key that comes
         //  before our search key
         auto next_node = current_node->links_[current_level];
-        while(next_node != end_ && next_node->key_ < key) {
+        while(next_node != end_sentinel_ && next_node->key_ < key) {
             current_node = next_node;
             next_node = current_node->links_[current_level];
         }
@@ -103,10 +116,10 @@ SkipList::Insert(std::string const& key, std::string const& value) {
 std::optional<std::string>
 SkipList::Search(std::string const& key) {
     std::clog << "Searching for ---> " << key << std::endl;
-    auto current{start_};
+    auto current{start_sentinel_};
 
     for(auto search_level = max_level_ - 1; search_level >= 0; search_level--) {
-        while(current->links_[search_level] != end_ && current->links_[search_level]->key_ < key) {
+        while(current->links_[search_level] != end_sentinel_ && current->links_[search_level]->key_ < key) {
             std::clog << std::format("Exploring key ---> {}\n", current->links_[search_level]->key_);
             current = current->links_[search_level];
         }
@@ -147,8 +160,8 @@ std::vector<std::pair<std::string, std::string>>
 SkipList::Scan() {
     std::vector<std::pair<std::string, std::string>> result{};
 
-    auto node = start_->links_[0];
-    while(node != end_) {
+    auto node = start_sentinel_->links_[0];
+    while(node != end_sentinel_) {
         result.emplace_back(std::make_pair(node->key_, node->value_));
         node = node->links_[0];
     }
@@ -160,7 +173,7 @@ std::ostream&
 operator<<(std::ostream& os, SkipList const& skip_list) {
     os << std::format("===== Printing SkipList") << std::endl;
 
-    for(auto node = skip_list.start_; node != nullptr; node = node->links_[0]) {
+    for(auto node = skip_list.start_sentinel_; node != nullptr; node = node->links_[0]) {
         os << *node;
     }
 

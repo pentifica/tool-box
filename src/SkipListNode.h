@@ -58,10 +58,10 @@ namespace pentifica::tbox {
         }
 
     public:
-        /// @brief  The links to other nodes
-        std::vector<SkipListNode*> links_;
         const int current_level_{};
         std::string key_{};
         std::string value_{};
+        /// @brief  The links to other nodes
+        std::vector<SkipListNode*> links_;
     };
 }
