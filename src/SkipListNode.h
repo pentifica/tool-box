@@ -24,22 +24,26 @@
 #include    <string>
 #include    <format>
 #include    <iostream>
+#include    <concepts>
+#include    <type_traits>
 
 namespace pentifica::tbox {
-    //  forward refs
-    class SkipList;
-    class SkipListNode;
-    std::ostream& operator<<(std::ostream&, SkipListNode const&);
+    template<typename K, typename V>
+    concept SkipNodeArgs = requires(K, V) {
+        requires std::is_move_constructible_v<K>;
+        requires std::is_move_constructible_v<V>;
+        requires std::is_default_constructible_v<K>;
+        requires std::is_default_constructible_v<V>;
+    };
 
-    class SkipListNode {
-        friend SkipList;
-
-    public:
+    template<typename K, typename V>
+    requires SkipNodeArgs<K, V>
+    struct SkipListNode {
         /// @brief  Prepare an instance for use
         /// @param  current_level   The level for the node (node level is zero-based)
         /// @param  key The node identifier
         /// @param  value   The node's value
-        SkipListNode(int current_level, std::string key, std::string value)
+        SkipListNode(int current_level, K key, V value)
             : current_level_(current_level)
             , key_(std::move(key))
             , value_(std::move(value))
@@ -47,21 +51,20 @@ namespace pentifica::tbox {
         {
         }
 
-        /// 
-        friend std::ostream&
-        operator<<(std::ostream& os, SkipListNode const& node) {
-            os << std::format("SkipListNode[{}] [{}:{}] @ {}",
-                node.current_level_, node.key_, node.value_, (void*)(&node))
-                << std::endl;
-
-            return os;            
-        }
-
-    public:
-        const int current_level_{};
-        std::string key_{};
-        std::string value_{};
+        int const current_level_{};
+        K const key_{};
+        V value_{};
         /// @brief  The links to other nodes
         std::vector<SkipListNode*> links_;
     };
+
+    template<typename K, typename V>
+    std::ostream&
+    operator<<(std::ostream& os, SkipListNode<K, V> const& node) {
+        os << std::format("SkipListNode[{}] [{}:{}] @ {}",
+            node.current_level_, node.key_, node.value_, (void*)(&node))
+            << std::endl;
+
+        return os;            
+    }
 }

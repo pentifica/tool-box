@@ -27,12 +27,13 @@ TEST(Test_SkipListLevelGenerator, test_values) {
 }
 TEST(Test_SkipListNode, test_init) {
     using namespace pentifica::tbox;
+    using SkipListNodeType = SkipListNode<std::string, std::string>;
 
-    std::string key{"key"};
-    std::string value{"value"};
-    size_t current_level{5};
+    const std::string key{"key"};
+    const std::string value{"value"};
+    constexpr size_t current_level{5};
 
-    SkipListNode node(current_level, key, value);
+    SkipListNodeType node(current_level, key, value);
 
     std::ostringstream actual;
     std::ostringstream expected;
@@ -45,8 +46,9 @@ TEST(Test_SkipListNode, test_init) {
 
 TEST(Test_SkipList, test_init) {
     using namespace pentifica::tbox;
+    using SkipListType = SkipList<std::string, std::string>;
 
-    auto sl = SkipList(max_level, level_generator);
+    auto sl = SkipListType(max_level, level_generator);
     for(auto const& link : sl.start_sentinel_->links_) {
         ASSERT_EQ(link, sl.end_sentinel_);
     }
@@ -54,9 +56,10 @@ TEST(Test_SkipList, test_init) {
 
 TEST(Test_SkipList, test_insert) {
     using namespace pentifica::tbox;
+    using SkipListType = SkipList<std::string, std::string>;
 
     //  linear search for the key in the skip list
-    auto linear_search = [](std::string key, SkipList* sl) {
+    auto linear_search = [](std::string key, SkipListType* sl) {
         auto current_node = sl->start_sentinel_;
         while(current_node != sl->end_sentinel_) {
             if(current_node->key_ == key) {
@@ -70,7 +73,7 @@ TEST(Test_SkipList, test_insert) {
     };
 
     //  Check the monotonicity of the keys
-    auto monotonicity_check = [](SkipList* sl) {
+    auto monotonicity_check = [](SkipListType* sl) {
         auto current_node = sl->start_sentinel_->links_[0];
         std::string prev_key{};
         std::string curr_key{};
@@ -88,7 +91,7 @@ TEST(Test_SkipList, test_insert) {
     //  set up the test
     std::clog << std::format("Initializing SkipList with level {}", max_level)
               << std::endl;            
-    auto sl = new SkipList(max_level, level_generator);
+    auto sl = new SkipListType(max_level, level_generator);
 
     std::vector<std::tuple<std::string, std::string>> kv_pairs = {
         {"hello", "world"},         {"something", "else"},
@@ -105,11 +108,12 @@ TEST(Test_SkipList, test_insert) {
 
 TEST(Test_SkipList, test_insert_and_search) {
     using namespace pentifica::tbox;
+    using SkipListType = SkipList<std::string, std::string>;
 
     //  initialize test
     std::clog << std::format("Initializing SkipList with level {}", max_level)
               << std::endl;
-    auto skip_list = SkipList(max_level, level_generator);
+    auto skip_list = SkipListType(max_level, level_generator);
     std::clog << skip_list;
 
     //  load data into the skip list
@@ -146,9 +150,10 @@ TEST(Test_SkipList, test_insert_and_search) {
 
 TEST(Test_SkipList, test_delete) {
     using namespace pentifica::tbox;
+    using SkipListType = SkipList<std::string, std::string>;
 
     std::clog << std::format("initializing SkipList with levels {}\n", max_level);
-    auto skip_list = SkipList(max_level, level_generator);
+    auto skip_list = SkipListType(max_level, level_generator);
 
     //  load some data into the SkipList
     std::vector<std::tuple<std::string, std::string>> kv_pairs {
@@ -182,9 +187,10 @@ TEST(Test_SkipList, test_delete) {
 
 TEST(Test_SkipList, test_scan) {
     using namespace pentifica::tbox;
+    using SkipListType = SkipList<std::string, std::string>;
 
     std::clog << std::format("initializing SkipList with levels {}\n", max_level);
-    auto skip_list = SkipList(max_level, level_generator);
+    auto skip_list = SkipListType(max_level, level_generator);
 
     //  Verify an empty list
     auto const& empty_list = skip_list.Scan();
