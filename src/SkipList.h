@@ -33,20 +33,76 @@
 #include    <vector>
 
 namespace pentifica::tbox {
-    //  forward references
-    template<typename K, typename V>
-    requires SkipNodeArgs<K, V>
-    class SkipList;
+    /// @brief  Defines an iterator that does a forward traversal of the
+    ///         SkipLisstNode(s) contained by a SkipLlist instance.
+    /// @tparam SL  The SkipList type to iterate over
+    template<typename SL>
+    class SkipListIterator {
+    public:
+        using category = std::forward_iterator_tag;
 
-    template<typename K, typename V>
-    requires SkipNodeArgs<K, V>
-    std::ostream& operator<<(std::ostream&, SkipList<K, V> const&);
+        using container_type = SL;
+        using container_ptr = container_type*;
 
+        using value_type = typename SL::value_type;
+        using reference = value_type&;
+        using pointer = value_type*;
+
+        /// @brief  Prepare an instance
+        /// @param container 
+        /// @param node 
+        SkipListIterator(container_ptr container, pointer node) noexcept
+            : container_(container)
+            , node_(node)
+        {}
+        /// @brief  Prepare an instance from and existing
+        /// @param other    The instance to use for initialization
+        SkipListIterator(SkipListIterator const& other) noexcept = default;
+        /// @brief  Cleanup
+        ~SkipListIterator() = default;
+        /// @brief  Pre-increment  advance
+        /// @return The advanced iterator
+        SkipListIterator& operator++() noexcept {
+            if(node_ != container_->end_sentinel_) {
+                node_ = node_->links_[0];
+            }
+            return *this;
+        }
+        /// @brief  Post-increment advance
+        /// @param  
+        /// @return 
+        SkipListIterator operator++(int) noexcept {
+            auto temp{*this};
+            ++(*this);
+            return temp;
+        }
+        bool operator==(SkipListIterator const& other) const noexcept {
+            return node_ == other.node_;
+        }
+        bool operator!=(SkipListIterator const& other) const noexcept {
+            return !operator==(other);
+        }
+        reference operator*() const noexcept { return *node_; }
+        pointer operator->() const noexcept { return node_; }
+
+    private:
+        container_ptr container_{};
+        pointer node_{};
+    };
+    /// @brief  Defines a skip list
+    /// @tparam K   The key type
+    /// @tparam V   The value type
     template<typename K, typename V>
     requires SkipNodeArgs<K, V>
     class SkipList {
     public:
-        /// @nrief  Basic setup of an instance
+        using value_type = SkipListNode<K, V>;
+        using iterator = SkipListIterator<SkipList<K, V>>;
+        using const_iterator = SkipListIterator<const SkipList<K, V>>;
+        friend iterator;
+
+    public:
+        /// @brief  Basic setup of an instance
         /// @param  max_level   Number of levels in the skiplist
         /// @param  gen_next_skip_level  Generates a skip level (0 .. max_level - 1)
         /// @note Levels are numbered from 0 .. max_level-1
@@ -58,7 +114,7 @@ namespace pentifica::tbox {
         /// @param  key     The lookup key
         /// @return An optional value referencing the value associated with the key
         std::optional<V>
-        Search(K const& key);
+        Find(K const& key);
 
         /// @brief  Insert a key-value pair
         /// @param key 
@@ -73,21 +129,39 @@ namespace pentifica::tbox {
         SkipListError::ErrorVariant
         Delete(K const& key);
 
-        /// @brief  Retrun a sorted list of the contents
-        /// @return A sorted list of the contents. Possible an empty list
-        std::vector<std::pair<K, V>>
-        Scan();
+        /// @brief Returns true if the list is empty.
+        /// @return 
+        bool Empty() const {
+            return begin_sentinel_->links_[0] == end_sentinel_;
+        }
 
-        friend
-        std::ostream& operator<< <> (std::ostream& os, SkipList<K, V> const& skip_list);
+        /// @brief  Returns the number of key/value pairs in the list
+        /// @return
+        auto Size() const { return count_; }
+
+        /// @brief  Returns an iterator initialized to the start of the list
+        /// @return
+        iterator begin() { return iterator(this, begin_sentinel_->links_[0]); }
+
+        /// @brief  Returns an iterator initialized to 1 past the end of the l;ist
+        /// @return
+        iterator end() { return iterator(this, end_sentinel_); }
+
+        /// @brief  Returns a const iterator initialized o the start of the list
+        /// @return
+        const_iterator begin() const { return const_iterator(this, begin_sentinel_->links_[0]); }
+
+        /// @briefReeeeturns a const iterator initialized to 1 past the end of the list
+        const_iterator end() const { return const_iterator(this, end_sentinel_); }
 
     private:
-        std::pair<SkipListNode<K, V>*, std::vector<SkipListNode<K, V>*>>
+        std::pair<value_type*, std::vector<value_type*>>
         IdentifyPredecessorNode(K const& key);
 
     public:
-        SkipListNode<K, V>* start_sentinel_{};
-        SkipListNode<K, V>* end_sentinel_{};
+        size_t count_{};
+        value_type* begin_sentinel_{};
+        value_type* end_sentinel_{};
         const int max_level_{};
         std::function<int(int)> gen_next_skip_level_{};
     };
@@ -100,11 +174,11 @@ namespace pentifica::tbox {
         : max_level_(max_level)
         , gen_next_skip_level_(gen_next_skip_level)
     {
-        start_sentinel_ = new SkipListNode<K, V>(max_level_ - 1, {}, {});
+        begin_sentinel_ = new SkipListNode<K, V>(max_level_ - 1, {}, {});
         end_sentinel_ = new SkipListNode<K, V>(max_level_ - 1, {}, {});
     
         //  connect start and end nodes
-        for(auto& link : start_sentinel_->links_) {
+        for(auto& link : begin_sentinel_->links_) {
             link = end_sentinel_;
         }
     }
@@ -113,22 +187,22 @@ namespace pentifica::tbox {
     template<typename K, typename V>
     requires SkipNodeArgs<K, V>
     SkipList<K, V>::~SkipList() {
-        for(auto node = start_sentinel_->links_[0];
+        for(auto node = begin_sentinel_->links_[0];
             node != end_sentinel_;
-            node = start_sentinel_->links_[0]) {
+            node = begin_sentinel_->links_[0]) {
     
-            //  move node links to start_sentinel_
+            //  move node links to begin_sentinel_
             for(int i = 0; i < max_level_; i++) {
-                if(start_sentinel_->links_[i] != node) {
+                if(begin_sentinel_->links_[i] != node) {
                     break;
                 }
-                start_sentinel_->links_[i] = node->links_[i];
+                begin_sentinel_->links_[i] = node->links_[i];
             }
     
             delete node;
         }
     
-        delete start_sentinel_;
+        delete begin_sentinel_;
         delete end_sentinel_;
     }
     //  ------------------------------------------------------------------------
@@ -141,7 +215,7 @@ namespace pentifica::tbox {
         auto update = std::vector<SkipListNode<K, V>*>(max_level_, nullptr);
     
         //  see if the node already exists
-        auto current_node{start_sentinel_};
+        auto current_node{begin_sentinel_};
     
         for(auto current_level = max_level_ - 1; current_level >= 0; current_level--) {
     
@@ -175,8 +249,6 @@ namespace pentifica::tbox {
     
         //  if the key exists at the curent node, update its value
         if(current_node->key_ == key) {
-            std::clog << std::format("BAZINGA! key {} found with value {}",
-                current_node->key_, current_node->value_) << std::endl;
             current_node->value_ = value;
         }
     
@@ -189,6 +261,7 @@ namespace pentifica::tbox {
                 new_node->links_[i] = update[i]->links_[i];
                 update[i]->links_[i] = new_node;
             }
+            ++count_;
         }
     
         return value;
@@ -198,13 +271,12 @@ namespace pentifica::tbox {
     template<typename K, typename V>
     requires SkipNodeArgs<K, V>
     std::optional<V>
-    SkipList<K, V>::Search(K const& key) {
-        std::clog << "Searching for ---> " << key << std::endl;
-        auto current{start_sentinel_};
+    SkipList<K, V>::Find(K const& key) {
+        auto current{begin_sentinel_};
     
         for(auto search_level = max_level_ - 1; search_level >= 0; search_level--) {
-            while(current->links_[search_level] != end_sentinel_ && current->links_[search_level]->key_ < key) {
-                std::clog << std::format("Exploring key ---> {}\n", current->links_[search_level]->key_);
+            while(current->links_[search_level] != end_sentinel_
+                && current->links_[search_level]->key_ < key) {
                 current = current->links_[search_level];
             }
         }
@@ -236,44 +308,11 @@ namespace pentifica::tbox {
             }
     
             delete node;
+            --count_;
             return SkipListError::ErrorVariant::NOERR;
         }
     
         //  key not found
         return SkipListError::ErrorVariant::KEY_NOT_FOUND;
-    }
-    //  ------------------------------------------------------------------------
-    //
-    template<typename K, typename V>
-    requires SkipNodeArgs<K, V>
-    std::vector<std::pair<K, V>>
-    SkipList<K, V>::Scan() {
-        std::vector<std::pair<std::string, std::string>> result{};
-    
-        auto node = start_sentinel_->links_[0];
-        while(node != end_sentinel_) {
-            result.emplace_back(std::make_pair(node->key_, node->value_));
-            node = node->links_[0];
-        }
-    
-        return result;
-    }
-    //  ------------------------------------------------------------------------
-    //
-    template<typename K, typename V>
-    requires SkipNodeArgs<K, V>
-    std::ostream&
-    operator<<(std::ostream& os, SkipList<K, V> const& skip_list) {
-        os << std::format("===== Printing SkipList") << std::endl;
-    
-        for(auto node = skip_list.start_sentinel_->links_[0];
-            node != skip_list.end_sentinel_; 
-            node = node->links_[0]) {
-            os << *node;
-        }
-    
-        os << std::format("===== END Printing SkipList") << std::endl;
-    
-        return os;
     }
 }
