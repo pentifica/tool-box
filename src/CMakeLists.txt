@@ -1,6 +1,5 @@
 add_library(toolbox
     Utility.cpp
-    SkipList.cpp
     )
 
 configure_file(Version.h.in Version.h)

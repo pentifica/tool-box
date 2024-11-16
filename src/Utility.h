@@ -20,6 +20,8 @@
 /// SOFTWARE.
 #include <tuple>
 #include <iostream>
+#include <concepts>
+#include <type_traits>
 
 namespace pentifica::tbox {
     /// @brief  Streams the tuple members
@@ -45,10 +47,17 @@ namespace pentifica::tbox {
     std::ostream& operator<<(std::ostream& os, TupleType const& tp) {
         return PrintTuple(os, tp, std::make_index_sequence<TupleSize>{});
     }
+    /// @brief  concept definition for RAII
+    template<typename Action>
+    concept RAII_Action_Requirements = requires(Action) {
+        requires std::is_copy_constructible_v<Action>;
+    };
+
     /// @brief Implements RAII for an encapsulated set of actions. Can be either a functor
     ///        or lambda. The encapsulating object must support copy semantics.
     /// @tparam Action Type of encapsulation
     template<typename Action>
+    requires RAII_Action_Requirements<Action>
     class RAII {
     public:
         explicit RAII(Action action) : action_{action} {}
