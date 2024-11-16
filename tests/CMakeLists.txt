@@ -13,6 +13,7 @@ add_executable(test_toolbox
     Test_Utility.cpp
     Test_StrSwitch.cpp
     Test_SkipList.cpp
+    Test_RingBuffer.cpp
     )
 
 target_link_libraries(test_toolbox
