@@ -17,3 +17,6 @@ A template for streaming an arbitrary tuple of values. All values must be stream
 
 ## RAII
 Implements RAII for an encapsulated set of actions. The action must support copy semantics.
+
+## RingBuffer
+A (configurably) thread-safe ring buffer. Supports blocking push/pop semantics and non-blocking push/pop semantics.
