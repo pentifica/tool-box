@@ -79,13 +79,13 @@ namespace pentifica::tbox {
         ///         added.
         /// @param obj  The instance to add
         void Push(T const& obj) {
-            std::lock_guard<mutex_type>  guard(push_mutex_);
+            std::unique_lock<mutex_type>  lck(push_mutex_);
             while(size_.load(std::memory_order_relaxed) == capacity_);
             ring_buffer_[Normalize(write_next_++)] = obj;
             size_.fetch_add(1, std::memory_order_acq_rel);
         }
         void Push(T& obj) {
-            std::lock_guard<mutex_type>  guard(push_mutex_);
+            std::unique_lock<mutex_type>  lck(push_mutex_);
             while(size_.load(std::memory_order_relaxed) == capacity_);
             ring_buffer_[Normalize(write_next_++)] = std::move(obj);
             size_.fetch_add(1, std::memory_order_acq_rel);
@@ -120,7 +120,7 @@ namespace pentifica::tbox {
         ///         the thread is blocked until an item is available.
         /// @return 
         T Pop() {
-            std::lock_guard<mutex_type> guard(pop_mutex_);
+            std::unique_lock<mutex_type> lck(pop_mutex_);
             while(size_.load(std::memory_order_relaxed) == 0);
             auto obj{std::move(ring_buffer_[Normalize(read_next_++)])};
             size_.fetch_sub(1, std::memory_order_acq_rel);
